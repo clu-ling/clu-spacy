@@ -1,2 +1,2 @@
-spacy==v3.0.6
-py-processors
+spacy==3.0.6
+py-processors==3.0.3

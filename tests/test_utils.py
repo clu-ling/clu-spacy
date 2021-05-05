@@ -1,12 +1,12 @@
 import spacy
-from doc_to_doc import DocToCluDoc
+from spacyprocessor.utils import ConverterUtils
 from processors.ds import Document as CluDocument # FIXME
 from processors.ds import Sentence
 import unittest
 
 PIPELINE = "en_core_web_sm"
 
-class TestDocToCluDoc(unittest.TestCase):    
+class TestConverterUtils(unittest.TestCase):    
     """
         Create a SpaCy document instance on a test text.
         Test DocToCluDoc class on test SpaCy doc.
