@@ -24,11 +24,7 @@ RUN pip install -U pip
 
 # SpaCy and pre-trained pipeline
 RUN pip install -U pip setuptools wheel
-RUN pip install -U spacy
-RUN pip install https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-1.2.0/en_core_web_sm-1.2.0.tar.gz --no-deps
-
-# py-processors
-RUN pip install py-processors
+RUN pip install requirements.txt
 
 # iPython
 RUN pip install -U ipython==7.19.0
@@ -38,6 +34,8 @@ RUN pip install -U jupyter==1.0.0
 RUN pip install -U jupyter-contrib-nbextensions==0.5.1
 RUN jupyter contrib nbextension install --user
 
+# Assignment-specific deps
+RUN pip install -e ".[all]"
 #CMD ["ipython"]
 # Launch jupyter
 CMD ["/bin/bash", "/usr/local/bin/launch-notebook.sh"]
