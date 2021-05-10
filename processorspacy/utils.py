@@ -1,11 +1,12 @@
 
-from typing import Sequence, List, Tuple, Dict
+from typing import Sequence, List, Tuple, Dict, Union
 import spacy
 from spacy.tokens import Doc as SpacyDoc
 from spacy.tokens import Span
 from processors.ds import Document as CluDocument
 from processors.ds import Sentence
 
+PIPELINE = "en_core_web_sm"
 
 class ConverterUtils:
 
@@ -14,7 +15,6 @@ class ConverterUtils:
 
         Supported Containers
         --------------------
-
         SpaCy Doc : Sequence[Token]
                 A sequence of SpaCy Token objects.
 
@@ -23,58 +23,52 @@ class ConverterUtils:
 
         Methods
         -------
+        to_spacy_doc(cluDoc, pipeline)
+            Converts a processors Document object to a SpaCy Doc object
 
-        to_spacyDoc : 
-
-        to_cluDoc :
+        to_clu_doc(spacyDoc)
+            Converts a SpaCy Doc object to a processors Document object
 
     """
 
     @staticmethod
-    def to_spacy_doc(cluDoc: CluDocument): # -> SpacyDoc:
-        """Create a Doc object.
-                vocab (Vocab): A vocabulary object, which must match any models you
-                    want to use (e.g. tokenizer, parser, entity recognizer).
-                words (Optional[List[str]]): A list of unicode strings to add to the document
-                    as words. If `None`, defaults to empty list.
-                spaces (Optional[List[bool]]): A list of boolean values, of the same length as
-                    words. True means that the word is followed by a space, False means
-                    it is not. If `None`, defaults to `[True]*len(words)`
-                user_data (dict or None): Optional extra data to attach to the Doc.
-                tags (Optional[List[str]]): A list of unicode strings, of the same
-                    length as words, to assign as token.tag. Defaults to None.
-                pos (Optional[List[str]]): A list of unicode strings, of the same
-                    length as words, to assign as token.pos. Defaults to None.
-                morphs (Optional[List[str]]): A list of unicode strings, of the same
-                    length as words, to assign as token.morph. Defaults to None.
-                lemmas (Optional[List[str]]): A list of unicode strings, of the same
-                    length as words, to assign as token.lemma. Defaults to None.
-                heads (Optional[List[int]]): A list of values, of the same length as
-                    words, to assign as heads. Head indices are the position of the
-                    head in the doc. Defaults to None.
-                deps (Optional[List[str]]): A list of unicode strings, of the same
-                    length as words, to assign as token.dep. Defaults to None.
-                sent_starts (Optional[List[Union[bool, None]]]): A list of values, of
-                    the same length as words, to assign as token.is_sent_start. Will be
-                    overridden by heads if heads is provided. Defaults to None.
-                ents (Optional[List[str]]): A list of unicode strings, of the same
-                    length as words, as IOB tags to assign as token.ent_iob and
-                    token.ent_type. Defaults to None.
+    def to_spacy_doc(cluDoc: Union[CluDocument, str], pipeline = PIPELINE) -> SpacyDoc:
         """
-        # Doc.from_bytes
-        #doc_data = {"Create Doc object":}
-        #doc = SpacyDoc(**doc_data)
-        pass
+           Converts a CluDocument: Sequence[Sentence] to a SpacyDoc: Sequence[Token]
+
+           Parameters
+           ----------
+           cluDoc: a processor Document object or path to JSON
+           pipeline: spacy pipeline, for vocab object
+
+           Returns
+           -------
+           A SpacyDocument object
+        """
+        if isinstance(cluDoc, str):
+            with open(cluDoc, 'r') as f:
+                cluDoc = CluDocument.load_from_JSON(f.read())
+        
+        nlp = spacy.load(pipeline)
+
+        doc_data = ConverterUtils.make_data(cluDoc)        
+        doc = SpacyDoc(nlp.vocab, **doc_data)
+
+        return doc
 
 
     @staticmethod
     def to_clu_doc(spacyDoc: SpacyDoc) -> CluDocument:
         """
-            Converts a SpacyDoc : Sequence[Token] to a CluDocument : Sequence[Sentence]
+            Converts a SpacyDoc: Sequence[Token] to a CluDocument: Sequence[Sentence]
 
-            Parameters: spacyDoc, a SpacyDoc object
+            Parameters
+            ----------
+            spacyDoc: a SpacyDoc object
 
-            Returns - a CluDocument object
+            Returns
+            -------
+            A CluDocument object
         """
         sents = list(spacyDoc.sents)
         assert isinstance(sents, List)
@@ -93,9 +87,13 @@ class ConverterUtils:
         """
             Converts a SpaCy Span (Doc slice) object to a processors Sentence object.
 
-            Parameters: sent, a SpaCy Span object
+            Parameters
+            ----------
+            sent: a SpaCy Span object
 
-            Returns: sentence, a processors Sentence object
+            Returns
+            -------
+            sentence: a processors Sentence object
         """
 
         offsets = ConverterUtils.find_offsets(sent)
@@ -117,6 +115,37 @@ class ConverterUtils:
         return sentence
 
     @staticmethod
+    def make_data(cluDoc: CluDocument) -> Dict:
+        """
+            Converts a CluDocument object to a dictionary of Doc attributes.
+
+            Parameters
+            ----------
+            cluDoc: a processors Document object
+
+            Returns
+            -------
+            data: a dictionary of SpaCy Doc attributes
+        """
+        spaces = []
+        for sent in cluDoc.sentences:
+            spaces += ConverterUtils.offsets_to_spaces(sent)
+        # assert len(spaces) == len(cluDoc.words)
+
+        heads, deps = ConverterUtils.parse_graphs(cluDoc)
+
+        data = {
+            "words": cluDoc.words,
+            "spaces": ConverterUtils.offsets_to_spaces(cluDoc),
+            "tags": cluDoc.tags,
+            "lemmas": cluDoc.lemmas,
+            "heads": heads,
+            "deps": deps,
+            "ents": cluDoc._entities
+        }
+        return data
+
+    @staticmethod
     def find_offsets(sent: Span) -> Tuple[List[int]]: # FIXME: Some offsets not accurate.
         startOffSets = [0] #The first start offset is always zero.
         running = sent[0].text_with_ws
@@ -130,9 +159,23 @@ class ConverterUtils:
         return (startOffSets, endOffSets)
 
     @staticmethod
+    def offsets_to_spaces(cluDoc: CluDocument) -> List[bool]:
+        # FIXME 
+        spaces = []
+        # for sent in cluDoc.sentences:
+        return spaces
+
+    @staticmethod
     def make_graphs(sent: Span) -> Dict:
         graphs = dict()
 
         # {graph-name -> {edges: [{source, destination, relation}], roots: [int]}}
 
-        return graphs
+        return graphs    
+
+    @staticmethod
+    def parse_graphs(cluDoc: CluDocument) -> Tuple[List, List]:
+        # FIXME
+        heads = []
+        deps = []
+        return (heads, deps)

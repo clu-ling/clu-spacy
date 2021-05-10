@@ -17,6 +17,7 @@ COPY . .
 
 # Move scripts to local/bin
 RUN mv scripts/* /usr/local/bin/
+RUN chmod u+x /usr/local/bin/test-all
 RUN rmdir scripts
 
 # Install python dependencies
@@ -24,7 +25,7 @@ RUN pip install -U pip
 
 # SpaCy and pre-trained pipeline
 RUN pip install -U pip setuptools wheel
-RUN pip install requirements.txt
+RUN pip install -r requirements.txt
 
 # iPython
 RUN pip install -U ipython==7.19.0
@@ -35,7 +36,9 @@ RUN pip install -U jupyter-contrib-nbextensions==0.5.1
 RUN jupyter contrib nbextension install --user
 
 # Assignment-specific deps
-RUN pip install -e ".[all]"
-#CMD ["ipython"]
+# RUN pip install -e ".[all]"
+# CMD ["ipython"]
 # Launch jupyter
 CMD ["/bin/bash", "/usr/local/bin/launch-notebook.sh"]
+# Launch api
+# CMD ["uvicorn", "processorspacy:server", "--reload", "--port", "8000", "--host", "0.0.0.0"]
