@@ -3,7 +3,7 @@ from setuptools.command.install import install
 from setuptools.command.develop import develop
 from setuptools import setup
 
-from processorspacy.info import info
+from processors_extensions.spacy.info import info
 
 class PackageDevelop(develop):
     def run(self):
@@ -18,7 +18,7 @@ class PackageInstall(install):
 
 # use requirements.txt as deps list
 with open('requirements.txt', 'r') as f:
-    required = f.read().splitlines()
+    required = [dep.strip() for dep in f.read().splitlines() if dep.strip() is not None]
 
 # get readme
 with open('README.md', 'r') as f:
@@ -26,8 +26,11 @@ with open('README.md', 'r') as f:
 
 test_deps = ["green>=2.5.0", "coverage", "mypy"]
 
-setup(name='processorspacy',
-      packages=["processorspacy"],
+setup(name='processors-extensions',
+      packages=["processors_extensions"],
+      scripts=[
+        'bin/api'
+      ],
       version=info.version,
       keywords=['nlp', 'converter'],
       description=info.description,

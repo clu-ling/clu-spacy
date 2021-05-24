@@ -6,7 +6,7 @@ from spacy.tokens import Span
 from processors.ds import Document as CluDocument
 from processors.ds import Sentence
 
-PIPELINE = "en_core_web_sm"
+DEFAULT_PIPELINE = "en_core_web_sm"
 
 class ConverterUtils:
 
@@ -32,7 +32,7 @@ class ConverterUtils:
     """
 
     @staticmethod
-    def to_spacy_doc(cluDoc: Union[CluDocument, str], pipeline = PIPELINE) -> SpacyDoc:
+    def to_spacy_doc(cluDoc: Union[CluDocument, str], pipeline = DEFAULT_PIPELINE) -> SpacyDoc:
         """
            Converts a CluDocument: Sequence[Sentence] to a SpacyDoc: Sequence[Token]
 
@@ -71,7 +71,7 @@ class ConverterUtils:
             A CluDocument object
         """
         sents = list(spacyDoc.sents)
-        assert isinstance(sents, List)
+        # assert isinstance(sents, List)
 
         sentences = [] #Initialize List[Sentence]
         for sent in sents:
@@ -96,18 +96,18 @@ class ConverterUtils:
             sentence: a processors Sentence object
         """
 
-        offsets = ConverterUtils.find_offsets(sent)
+        offsets = ConverterUtils.spaces_to_offsets(sent)
 
         params = {
             "text": sent.text,
             "words": [token.text for token in sent],
             "startOffsets": offsets[0],
             "endOffsets": offsets[1],
-            "tags": [token.pos for token in sent],
-            "lemmas": [token.lemma for token in sent],
+            "tags": [token.pos_ for token in sent],
+            "lemmas": [token.lemma_ for token in sent],
             "chunks": ["O" for token in sent], # FIXME: SpaCy noun_chunks?,
-            "entities": [token.ent_iob_+token.ent_type_ for token in sent],
-            "graphs": ConverterUtils.make_graphs(sent)
+            "entities": [token.ent_iob_+"-"+token.ent_type_ for token in sent],
+            "graphs": ConverterUtils.dep_to_graph(sent)
         }
 
         sentence = Sentence(**params)
@@ -132,7 +132,7 @@ class ConverterUtils:
             spaces += ConverterUtils.offsets_to_spaces(sent)
         # assert len(spaces) == len(cluDoc.words)
 
-        heads, deps = ConverterUtils.parse_graphs(cluDoc)
+        heads, deps = ConverterUtils.graph_to_dep(cluDoc)
 
         data = {
             "words": cluDoc.words,
@@ -146,7 +146,7 @@ class ConverterUtils:
         return data
 
     @staticmethod
-    def find_offsets(sent: Span) -> Tuple[List[int]]: # FIXME: Some offsets not accurate.
+    def spaces_to_offsets(sent: Span) -> Tuple[List[int]]: # FIXME: Some offsets not accurate.
         startOffSets = [0] #The first start offset is always zero.
         running = sent[0].text_with_ws
         endOffSets = [len(running)-1]
@@ -166,15 +166,31 @@ class ConverterUtils:
         return spaces
 
     @staticmethod
-    def make_graphs(sent: Span) -> Dict:
+    def dep_to_graph(sent: Span) -> Dict:
         graphs = dict()
+        # {graph-name: {edges: [{source: int, destination: int, relation: str}], roots: [int]}}
 
-        # {graph-name -> {edges: [{source, destination, relation}], roots: [int]}}
+        spacy_graph = dict()
+
+        tokens = [token.text for token in sent]
+        deps = [token.dep_ for token in sent]
+        heads = [token.head.text for token in sent]
+
+        edges = []
+        for i in range(len(tokens)):
+            if tokens[i] != heads[i]:
+                edge = {"source": tokens.index(heads[i]), "destination": i, "relation": deps[i]}
+                edges.append(edge)
+
+        spacy_graph["edges"] = edges
+        spacy_graph["roots"] = [sent.root]
+
+        graphs["spacy-dependencies"] = spacy_graph
 
         return graphs    
 
     @staticmethod
-    def parse_graphs(cluDoc: CluDocument) -> Tuple[List, List]:
+    def graph_to_dep(cluDoc: CluDocument) -> Tuple[List, List]:
         # FIXME
         heads = []
         deps = []

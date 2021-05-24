@@ -1,0 +1,93 @@
+#!/usr/bin/python
+from __future__ import annotations
+
+from typing import Optional, Text, List
+from fastapi import FastAPI, File
+import uvicorn
+
+from processors_extensions.spacy import info
+
+from spacy.tokens import Doc as SpacyDoc
+from processors.ds import Document as CluDocument
+
+from processors_extensions.spacy.utils import ConverterUtils as converter
+from processors_extensions.spacy.annotator import SpacyProcessor, DEFAULT_PIPELINE
+
+from pydantic import BaseModel
+import yaml
+import os
+import argparse
+import logging
+
+
+class APIConfig(BaseModel):
+    host: Text = "0.0.0.0"
+    port: int = 8000
+    pipeline: Text = DEFAULT_PIPELINE
+
+    @staticmethod
+    def from_file(config_file: Text) -> "APIConfig":
+        """
+        Loads a conf instance from a YAML file
+        """
+        cfp = os.path.abspath(config_file)
+        with open(cfp) as f:
+            return APIConfig.from_str(config=f.read())
+
+    @staticmethod
+    def from_str(config: Text) -> "APIConfig":
+        """
+        Loads a conf instance based on the contents (str) of a YAML config file
+        """
+        return yaml.load(config, Loader=yaml.FullLoader).get("spacy")
+
+
+# Host and port from conf, possibly debug? logging
+
+if __name__ == "__main__":
+
+    parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)  
+    parser.add_argument("-c", "--config", help="yaml config file")
+    # parser.add_argument("-i", "--input", dest="input", nargs="?", help="path to columnar/jsonlines input data to be enriched")
+    # parser.add_argument("-f", "--format", dest="output_format", type=str, default="feather", nargs="?", choices=OUTPUT_FORMATS.keys(), help="export format")
+    # parser.add_argument("-r", "--remove", dest="to_remove", type=str, default=None, nargs="?", help="columns to remove when processing")
+    args = parser.parse_args()
+  
+    # read `spacy:` block from YAML
+    conf = APIConfig.from_file(args.config)    
+    
+    server = FastAPI()
+    # Feed pipeline path from conf
+    proc = SpacyProcessor(pipeline = conf['pipeline'])    
+    
+    @server.post("/api/annotate")
+    def annotate(text: Text):    
+        return proc.annotate(text).to_JSON()
+
+    # FIXME
+    # @server.post("/api/to-clu-doc")
+    # def to_clu_doc(spacyDoc: SpacyDoc):
+    #     cluDoc = converter.to_clu_doc(spacyDoc)
+    #     return cluDoc.to_JSON()
+
+    # FIXME
+    # @server.post("/api/to-spacy-doc")
+    # def to_spacy_doc(cluDoc: CluDocument):
+    #     spacyDoc = coverter.to_spacy_doc(cluDoc)
+    #     return spacyDoc
+
+    @server.get("/api/version")
+    async def version():
+        """
+        App version
+        """
+        return processorspacy.info.version
+
+    @server.get("/api/info")
+    async def app_info():
+        """
+        App info
+        """
+        return processorspacy.info
+
+    uvicorn.run(server, port=conf['port'], host=conf['host'])
