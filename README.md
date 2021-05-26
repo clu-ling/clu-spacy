@@ -10,9 +10,9 @@ Currently, only the ```spacy``` extension is available. This extension provides 
 
 # API
 
-```docker run -it -p 8871:8000 parsertongue/processorsextensions:latest api --config /app/bin/test-config.yml```
+```docker run -it -p 8888:8000 parsertongue/processorsextensions:latest api --config /app/bin/test-config.yml```
 
-Open your browser to [localhost:8871/docs](http://localhost:8871/docs).
+Open your browser to [localhost:8888/docs](http://localhost:8888/docs).
 
 # TEST
 

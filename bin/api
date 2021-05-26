@@ -5,7 +5,7 @@ from typing import Optional, Text, List
 from fastapi import FastAPI, File
 import uvicorn
 
-from processors_extensions.spacy import info
+from processors_extensions.spacy.info import info
 
 from spacy.tokens import Doc as SpacyDoc
 from processors.ds import Document as CluDocument
@@ -39,7 +39,15 @@ class APIConfig(BaseModel):
         """
         Loads a conf instance based on the contents (str) of a YAML config file
         """
-        return yaml.load(config, Loader=yaml.FullLoader).get("spacy")
+        config_dict = yaml.load(config, Loader=yaml.FullLoader).get("spacy")
+
+        conf = APIConfig(
+            host = config_dict["host"],
+            port = config_dict["port"],
+            pipeline = config_dict["pipeline"]
+        )
+
+        return conf
 
 
 # Host and port from conf, possibly debug? logging
@@ -48,9 +56,6 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)  
     parser.add_argument("-c", "--config", help="yaml config file")
-    # parser.add_argument("-i", "--input", dest="input", nargs="?", help="path to columnar/jsonlines input data to be enriched")
-    # parser.add_argument("-f", "--format", dest="output_format", type=str, default="feather", nargs="?", choices=OUTPUT_FORMATS.keys(), help="export format")
-    # parser.add_argument("-r", "--remove", dest="to_remove", type=str, default=None, nargs="?", help="columns to remove when processing")
     args = parser.parse_args()
   
     # read `spacy:` block from YAML
@@ -58,11 +63,13 @@ if __name__ == "__main__":
     
     server = FastAPI()
     # Feed pipeline path from conf
-    proc = SpacyProcessor(pipeline = conf['pipeline'])    
+    proc = SpacyProcessor(pipeline = conf.pipeline)
     
     @server.post("/api/annotate")
-    def annotate(text: Text):    
-        return proc.annotate(text).to_JSON()
+    def annotate(text: Text):
+        cludoc = proc.annotate(text)
+        cludoc.text = text
+        return cludoc.to_JSON_dict()
 
     # FIXME
     # @server.post("/api/to-clu-doc")
@@ -81,13 +88,14 @@ if __name__ == "__main__":
         """
         App version
         """
-        return processorspacy.info.version
+        return info.version
 
     @server.get("/api/info")
     async def app_info():
         """
         App info
         """
-        return processorspacy.info
+        return info
 
-    uvicorn.run(server, port=conf['port'], host=conf['host'])
+    #Run server
+    uvicorn.run(server, port=conf.port, host=conf.host)

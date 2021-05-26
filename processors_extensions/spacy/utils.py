@@ -1,8 +1,8 @@
 
-from typing import Sequence, List, Tuple, Dict, Union
+from typing import Sequence, List, Tuple, Dict, Union, Iterable
 import spacy
 from spacy.tokens import Doc as SpacyDoc
-from spacy.tokens import Span
+from spacy.tokens import Span, Token
 from processors.ds import Document as CluDocument
 from processors.ds import Sentence
 
@@ -23,13 +23,34 @@ class ConverterUtils:
 
         Methods
         -------
-        to_spacy_doc(cluDoc, pipeline)
-            Converts a processors Document object to a SpaCy Doc object
-
         to_clu_doc(spacyDoc)
             Converts a SpaCy Doc object to a processors Document object
 
+        to_spacy_doc(cluDoc, pipeline)
+            Converts a processors Document object to a SpaCy Doc object 
     """
+
+    @staticmethod
+    def to_clu_doc(spacyDoc: SpacyDoc) -> CluDocument:
+        """
+            Converts a SpacyDoc: Sequence[Token] to a CluDocument: Sequence[Sentence]
+
+            Parameters
+            ----------
+            spacyDoc: a SpacyDoc object
+
+            Returns
+            -------
+            A CluDocument object
+        """
+        sentences = [] #Initialize List[Sentence]
+
+        for sent in spacyDoc.sents:
+            sentences.append(ConverterUtils.make_sentence(sent))
+
+        doc = CluDocument(sentences)
+        
+        return doc
 
     @staticmethod
     def to_spacy_doc(cluDoc: Union[CluDocument, str], pipeline = DEFAULT_PIPELINE) -> SpacyDoc:
@@ -56,34 +77,10 @@ class ConverterUtils:
 
         return doc
 
+    ### Helper Methods :
 
     @staticmethod
-    def to_clu_doc(spacyDoc: SpacyDoc) -> CluDocument:
-        """
-            Converts a SpacyDoc: Sequence[Token] to a CluDocument: Sequence[Sentence]
-
-            Parameters
-            ----------
-            spacyDoc: a SpacyDoc object
-
-            Returns
-            -------
-            A CluDocument object
-        """
-        sents = list(spacyDoc.sents)
-        # assert isinstance(sents, List)
-
-        sentences = [] #Initialize List[Sentence]
-        for sent in sents:
-            sentences.append(ConverterUtils.make_Sentence(sent))
-
-        doc = CluDocument(sentences)
-        
-        return doc
-
-
-    @staticmethod
-    def make_Sentence(sent: Span) -> Sentence:
+    def make_sentence(sent: Span) -> Sentence:
         """
             Converts a SpaCy Span (Doc slice) object to a processors Sentence object.
 
@@ -96,17 +93,17 @@ class ConverterUtils:
             sentence: a processors Sentence object
         """
 
-        offsets = ConverterUtils.spaces_to_offsets(sent)
+        startoffsets, endoffsets = ConverterUtils.spaces_to_offsets(sent)
 
         params = {
             "text": sent.text,
             "words": [token.text for token in sent],
-            "startOffsets": offsets[0],
-            "endOffsets": offsets[1],
-            "tags": [token.pos_ for token in sent],
+            "startOffsets": startoffsets,
+            "endOffsets": endoffsets,
+            "tags": [token.tag_ for token in sent],
             "lemmas": [token.lemma_ for token in sent],
-            "chunks": ["O" for token in sent], # FIXME: SpaCy noun_chunks?,
-            "entities": [token.ent_iob_+"-"+token.ent_type_ for token in sent],
+            "chunks": ["O" for token in sent], # FIXME: SpaCy noun_chunks?
+            "entities": [t.ent_iob_+"-"+t.ent_type_ if t.ent_type_ != "" else "O" for t in sent],
             "graphs": ConverterUtils.dep_to_graph(sent)
         }
 
@@ -146,15 +143,17 @@ class ConverterUtils:
         return data
 
     @staticmethod
-    def spaces_to_offsets(sent: Span) -> Tuple[List[int]]: # FIXME: Some offsets not accurate.
-        startOffSets = [0] #The first start offset is always zero.
-        running = sent[0].text_with_ws
-        endOffSets = [len(running)-1]
+    def spaces_to_offsets(sent: Span) -> Tuple[List[int]]:
 
-        for i in range(len(sent)-1):
-            startOffSets.append(len(running))
-            running += sent[i+1].text_with_ws
-            endOffSets.append(len(running)-1)
+        startOffSets = list()
+        endOffSets = list()
+
+        for token in sent:
+            offset = token.idx - sent.start_char
+            startOffSets.append(offset)
+            endOffSets.append(offset + len(token.text))
+
+        assert startOffSets[0] == 0
 
         return (startOffSets, endOffSets)
 
@@ -172,20 +171,19 @@ class ConverterUtils:
 
         spacy_graph = dict()
 
-        tokens = [token.text for token in sent]
-        deps = [token.dep_ for token in sent]
-        heads = [token.head.text for token in sent]
-
         edges = []
-        for i in range(len(tokens)):
-            if tokens[i] != heads[i]:
-                edge = {"source": tokens.index(heads[i]), "destination": i, "relation": deps[i]}
+        for token in sent:
+            children = token.children
+            child = ConverterUtils.peek(children)
+            while child is not None:
+                edge = {"source": token.i-sent.start, "destination": child.i-sent.start, "relation": child.dep_}
                 edges.append(edge)
+                child = ConverterUtils.peek(children)
 
         spacy_graph["edges"] = edges
-        spacy_graph["roots"] = [sent.root]
+        spacy_graph["roots"] = [sent.root.i-sent.start]
 
-        graphs["spacy-dependencies"] = spacy_graph
+        graphs["stanford-basic"] = spacy_graph
 
         return graphs    
 
@@ -195,3 +193,12 @@ class ConverterUtils:
         heads = []
         deps = []
         return (heads, deps)
+
+    @staticmethod
+    def peek(generator: Iterable) -> Union[Token, None]:
+        """peek() will return either the next Token in the iterable or None."""
+        try:
+            first = next(generator)
+        except StopIteration:
+            return None
+        return first

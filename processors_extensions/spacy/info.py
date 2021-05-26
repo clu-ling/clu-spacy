@@ -1,7 +1,6 @@
-from dataclasses import dataclass
+from pydantic import BaseModel
 
-@dataclass(frozen=True)
-class AppInfo:
+class AppInfo(BaseModel):
     """
     General information about the application.
     """

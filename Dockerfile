@@ -24,6 +24,12 @@ RUN pip install -U ipython==7.19.0 \
     jupyter contrib nbextension install --user &&\
     pytest==5.3.4
 
+RUN pip install -U spacy>="3.0.0,<4.0.0" \
+    py-processors==3.0.3 \
+    fastapi[all]==0.61.1 \
+    uvicorn==0.11.8 \
+    https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-3.0.0/en_core_web_sm-3.0.0.tar.gz#egg=en_core_web_sm
+    
 # Bundle app source
 COPY . .
 
@@ -34,7 +40,7 @@ RUN mv scripts/* /usr/local/bin/ && \
 
 # Assignment-specific deps
 RUN pip install -e ".[all]"
-RUN pip install https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-3.0.0/en_core_web_sm-3.0.0.tar.gz#egg=en_core_web_sm
+
 # CMD ["ipython"]
 # Launch jupyter
 # CMD ["/bin/bash", "/usr/local/bin/launch-notebook.sh"]
