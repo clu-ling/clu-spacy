@@ -26,8 +26,8 @@ with open('README.md', 'r') as f:
 
 test_deps = ["green>=2.5.0", "coverage", "mypy"]
 
-setup(name='processors-extensions',
-      packages=["processors_extensions"],
+setup(name='clu-spacy',
+      packages=["clu_spacy"],
       scripts=[
         'bin/api'
       ],

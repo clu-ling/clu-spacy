@@ -80,7 +80,7 @@ class ConverterUtils:
     ### Helper Methods :
 
     @staticmethod
-    def make_sentence(sent: Span) -> Sentence:
+    def to_sentence(sent: Span) -> Sentence:
         """
             Converts a SpaCy Span (Doc slice) object to a processors Sentence object.
 
@@ -112,7 +112,7 @@ class ConverterUtils:
         return sentence
 
     @staticmethod
-    def make_data(cluDoc: CluDocument) -> Dict:
+    def to_dict(cluDoc: CluDocument) -> Dict:
         """
             Converts a CluDocument object to a dictionary of Doc attributes.
 
@@ -151,7 +151,7 @@ class ConverterUtils:
         for token in sent:
             offset = token.idx - sent.start_char
             startOffSets.append(offset)
-            endOffSets.append(offset + len(token.text))
+            endOffSets.append(offset + len(token))
 
         assert startOffSets[0] == 0
 
@@ -171,7 +171,7 @@ class ConverterUtils:
 
         spacy_graph = dict()
 
-        edges = []
+        edges = list() # edges: List[Dict]
         for token in sent:
             children = token.children
             child = ConverterUtils.peek(children)
@@ -195,7 +195,7 @@ class ConverterUtils:
         return (heads, deps)
 
     @staticmethod
-    def peek(generator: Iterable) -> Union[Token, None]:
+    def _peek(generator: Iterable) -> Union[Token, None]:
         """peek() will return either the next Token in the iterable or None."""
         try:
             first = next(generator)

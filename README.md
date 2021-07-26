@@ -1,6 +1,6 @@
-# processors_extensions
+# clu-spacy
 
-```processors-extensions``` is a python library with extension modules for the ```py-processors``` library. 
+```clu-spacy``` is a python library with extension modules for the ```py-processors``` library. 
 
 Currently, only the ```spacy``` extension is available. This extension provides support for ```SpaCy```, allowing users to create processors ```Document```s with annotations from SpaCy. This allows for the use of annotations from custom trained SpaCy pipelines.
 

@@ -21,7 +21,7 @@ class TestConverterUtils(unittest.TestCase):
     dir_path = os.path.dirname(os.path.realpath(__file__))
     test_clu_doc = os.path.join(dir_path, 'cluDoc1.json')
 
-    # FIXME
+    # FIXME: Add Tests for to_spacy_doc() with update.
     # def test_to_spacy_doc(self):
     #     spacydoc = converter.to_spacy_doc(self.test_clu_doc)
     #     assert isinstance(spacydoc, SpacyDocument)
@@ -38,6 +38,15 @@ class TestConverterUtils(unittest.TestCase):
         assert cludoc.text == self.test_spacy_doc.text
         assert len(cludoc.words) == len(spacydoc_words)
         assert cludoc.lemmas == spacydoc_lemmas
+
+    def test_make_sentence(self):
+        pass
+
+    def test_spaces_to_offsets(self):
+        pass
+
+    def test_dep_to_graph(self):
+        pass
 
 class TestSpacyProcessor(unittest.TestCase):
     """
