@@ -28,8 +28,9 @@ nav:
     - Home: index.md
     #- Getting Started: getting-started.md
     - User Guide:
-        - Usage: tutorial.md
         - Installation: install.md
+        - Usage: tutorial.md
+        - Training: pipeline.md
     - Developing:
         - Install: dev/install.md
         - Testing: dev/test.md
