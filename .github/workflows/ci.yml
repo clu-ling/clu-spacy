@@ -32,28 +32,27 @@ jobs:
       uses: docker/setup-qemu-action@v1
     - name: Set up Docker Buildx
       uses: docker/setup-buildx-action@v1
-    - name: Login to DockerHub # FIXME: Optional
-      continue-on-error: true
-      uses: docker/login-action@v1
-      with:
-        username: ${{ secrets.DOCKERHUB_USERNAME }}
-        password: ${{ secrets.DOCKERHUB_TOKEN }}
+    # - name: Login to DockerHub
+    #   continue-on-error: true
+    #   uses: docker/login-action@v1
+    #   with:
+    #     username: ${{ secrets.DOCKERHUB_USERNAME }}
+    #     password: ${{ secrets.DOCKERHUB_TOKEN }}
     # Library (docker)
     - name: "Build docker image (clu-test)"
       #working-directory: ./
       env:
         DOCKERFILE: "Dockerfile"
         ORG: "parsertongue"
-        IMAGE_NAME: "clu-spacy"
+        IMAGE_NAME: "spacy"
         TAG: "3.8"
-      run: |
-        docker buildx build --output=type=docker --platform=linux/amd64,linux/arm64 -f ${DOCKERFILE} -t "${ORG}/${IMAGE_NAME}:latest" -t "${ORG}/${IMAGE_NAME}:${TAG}" -t "${ORG}/${IMAGE_NAME}:${{ needs.setup.outputs.sha_short }}" .
-    #    docker build -f Dockerfile -t "${ORG}/${IMAGE_NAME}:latest" -t "${ORG}/${IMAGE_NAME}:${{ needs.setup.outputs.sha_short }}" .
+      run: |        
+        docker build -f Dockerfile -t "${ORG}/${IMAGE_NAME}:latest" -t "${ORG}/${IMAGE_NAME}:${{ needs.setup.outputs.sha_short }}" .
     # Tests
     - name: "Tests and coverage (test)"
       env:
         ORG: "parsertongue"
-        IMAGE_NAME: "clu-spacy"
+        IMAGE_NAME: "spacy"
       run: |
         docker run -i "${ORG}/${IMAGE_NAME}:latest" green -vvv /app
     # Type checks
@@ -61,37 +60,38 @@ jobs:
       continue-on-error: true
       env:
         ORG: "parsertongue"
-        IMAGE_NAME: "clu-spacy"
+        IMAGE_NAME: "spacy"
       run : |
         docker run -i "${ORG}/${IMAGE_NAME}:latest" mypy --ignore-missing-imports --follow-imports=skip --strict-optional /app
     # publish
-    - name: "Publish docker image (clu-spacy image)"
-      continue-on-error: true
-      env:
-        ORG: "parsertongue"
-        IMAGE_NAME: "clu-spacy"
-      if: github.ref == 'refs/heads/main'
-      run: docker push --all-tags "${ORG}/${IMAGE_NAME}"
+    # - name: "Publish docker image (clu-spacy image)"
+    #   continue-on-error: true
+    #   env:
+    #     ORG: "parsertongue"
+    #     IMAGE_NAME: "spacy"
+    #   if: github.ref == 'refs/heads/main'
+    #   run: |
+    #     docker buildx build --platform=linux/amd64,linux/arm64 -f ${DOCKERFILE} --push -t "${ORG}/${IMAGE_NAME}:latest" -t "${ORG}/${IMAGE_NAME}:${TAG}" -t "${ORG}/${IMAGE_NAME}:${{ needs.setup.outputs.sha_short }}" .
 
     # code formatting and linting
     - name: "Code formatting & linting"
       continue-on-error: true
       env:
         ORG: "parsertongue"
-        IMAGE_NAME: "clu-spacy"
+        IMAGE_NAME: "spacy"
       run: docker run -i "${ORG}/${IMAGE_NAME}" black --check /app
 
     # docs
     - name: "Create documentation (API docs)"
       env:
         ORG: "parsertongue"
-        IMAGE_NAME: "clu-spacy"
+        IMAGE_NAME: "spacy"
       run: docker run -i -v "$GITHUB_WORKSPACE:/app" "${ORG}/${IMAGE_NAME}" pdoc --html -c latex_math=True --force --output-dir docs/api clu
     # docs
     - name: "Create documentation (other)"
       env:
         ORG: "parsertongue"
-        IMAGE_NAME: "clu-spacy"
+        IMAGE_NAME: "spacy"
       run: docker run -i -v "$GITHUB_WORKSPACE:/app" "${ORG}/${IMAGE_NAME}" mkdocs build -c
     - name: Deploy docs
       if: github.ref == 'refs/heads/main'

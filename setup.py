@@ -3,7 +3,7 @@ from setuptools.command.install import install
 from setuptools.command.develop import develop
 from setuptools import setup
 
-from processors_extensions.spacy.info import info
+from clu.spacy.info import info
 
 class PackageDevelop(develop):
     def run(self):
@@ -14,7 +14,7 @@ class PackageInstall(install):
     def run(self):
         # install everything else
         install.run(self)
-
+        
 
 # use requirements.txt as deps list
 with open('requirements.txt', 'r') as f:
@@ -26,8 +26,22 @@ with open('README.md', 'r') as f:
 
 test_deps = ["green>=2.5.0", "coverage", "mypy"]
 
+dev_deps = test_deps + [
+    "black @ git+git://github.com/psf/black.git",
+    "mkdocs==1.2.1",
+    # "portray @ git+git://github.com/myedibleenso/portray.git@issue/83",
+    # "portray @ git+git://github.com/myedibleenso/portray.git@avoid-regressions",
+    # "mkapi==1.0.14",
+    "pdoc3==0.9.2",
+    "mkdocs-git-snippet==0.1.1",
+    "mkdocs-git-revision-date-localized-plugin==0.9.2",
+    "mkdocs-git-authors-plugin==0.3.3",
+    "mkdocs-rtd-dropdown==1.0.2",
+    "pre-commit==2.13.0",
+]
+
 setup(name='clu-spacy',
-      packages=["clu_spacy"],
+      packages=["clu.spacy"],
       scripts=[
         'bin/api'
       ],
