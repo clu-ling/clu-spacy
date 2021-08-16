@@ -1,9 +1,9 @@
-site_name: clu-test
-site_url: https://clu-ling.github.io/clu-test
+site_name: clu-spacy
+site_url: https://clu-ling.github.io/clu-spacy
 site_description: Project documentation with Markdown.
 site_author: Gus Hahn-Powell
 
-repo_url: https://github.com/clu-ling/clu-test/
+repo_url: https://github.com/clu-ling/clu-spacy/
 edit_uri: "blob/main/docs/"
 
 theme:
@@ -26,22 +26,22 @@ theme:
 nav:
     # NOTE: all relative to docs/
     - Home: index.md
-    #- Getting Started: getting-started.md
     - User Guide:
         - Installation: install.md
         - Usage: tutorial.md
-        - Training: pipeline.md
     - Developing:
         - Install: dev/install.md
         - Testing: dev/test.md
         - Documentation: dev/documentation.md
         - Formatting: dev/formatting.md
+    - Training:
+        - SpaCy Pipeline: pipeline.md
+        - FAQ: pipefaq.md
     - API:
         - "clu.test": api/clu/test/index.html
     - About:
-        #- Release Notes: about/release-notes.md
         - Contributing: contributing.md
-        - License: "License, FIXME"
+        # - License: "License, FIXME"
 
 extra_css:
     - css/extra.css
