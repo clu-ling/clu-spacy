@@ -69,8 +69,7 @@ setup(name='clu-spacy',
       tests_require=test_deps,
       extras_require={
         'test': test_deps,
-        'all': test_deps + required
-        # 'docs': docs_deps
+        'all': dev_deps + required
       },
       include_package_data=True,
       zip_safe=False)

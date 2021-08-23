@@ -17,7 +17,7 @@ RUN pip install -U ipython==7.19.0 \
     pytest==5.3.4
 
 # SpaCy and API deps
-RUN pip install -U spacy>="3.0.0,<4.0.0" \
+RUN pip install -U "spacy>=3.0.0,<4.0.0" \
     py-processors==3.0.3 \
     fastapi[all]==0.61.1 \
     uvicorn==0.11.8 

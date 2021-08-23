@@ -1,4 +1,3 @@
 py-processors==3.0.3
-spacy>=3.0.0,<4.0.0
 fastapi[all]==0.61.1
 uvicorn==0.11.8

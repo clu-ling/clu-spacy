@@ -22,21 +22,21 @@ $$\sum_{i=1}^{\vert X \vert} x_{i}$$
 # execute the following command from the project root:
 docker run --rm -it -v $PWD:/app \
   -p 8001:8001 \
-  parsertongue/clu-phontools:latest \
+  parsertongue/clu-spacy:latest \
   pdoc --html -c latex_math=True --force --output-dir docs/api --http 0.0.0.0:8001 clu
 ```
 
-Open your browser to [localhost:8001/clu/phontools](localhost:8001/clu/phontools) to see live updates.
+Open your browser to [localhost:8001/clu/spacy](localhost:8001/clu/spacy) to see live updates.
 
 ### Anaconda
 
 ```bash
-source activate clu-phontools
+source activate clu-spacy
 # execute the following command from the project root:
 pdoc --html -c latex_math=True --force --output-dir docs/api --http 0.0.0.0:8001 clu
 ```
 
-Open your browser to [localhost:8001/clu/phontools](localhost:8001/clu/phontools) to see live updates.
+Open your browser to [localhost:8001/clu/spacy](localhost:8001/clu/spacy) to see live updates.
 
 ## General documentation
 
@@ -48,7 +48,7 @@ We use `mkdocs` to generate our site documentation from markdown.  Markdown sour
 # execute the following command from the project root:
 docker run --rm -it -v $PWD:/app \
   -p 8000:8000 \
-  parsertongue/clu-phontools:latest \
+  parsertongue/clu-spacy:latest \
   mkdocs serve -a 0.0.0.0:8000
 ```
 
@@ -59,7 +59,7 @@ Open your browser to [localhost:8000](localhost:8000) to see live updates.
 To develop the documentation with live reloading, run the following command:
 
 ```bash
-source activate clu-phontools
+source activate clu-spacy
 # execute the following command from the project root:
 mkdocs serve -a 0.0.0.0:8000
 ```

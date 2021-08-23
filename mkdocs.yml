@@ -35,7 +35,8 @@ nav:
         - Documentation: dev/documentation.md
         - Formatting: dev/formatting.md
     - Training:
-        - SpaCy Pipeline: pipeline.md
+        - Pipeline: pipeline.md
+        - Data: data.md
         - FAQ: pipefaq.md
     - API:
         - "clu.test": api/clu/test/index.html
