@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <meta name="author" content="Gus Hahn-Powell">
+  <link rel="canonical" href="https://clu-ling.github.io/clu-spacy/pipeline/">
+  <link rel="shortcut icon" href="../img/favicon.ico">
+  <title>Pipeline - clu-spacy</title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Lato:400,700|Roboto+Slab:400,700|Inconsolata:400,700" />
+
+  <link rel="stylesheet" href="../css/theme.css" />
+  <link rel="stylesheet" href="../css/theme_extra.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.5.0/styles/github.min.css" />
+  <link href="../css/extra.css" rel="stylesheet" />
+  
+  <script>
+    // Current page data
+    var mkdocs_page_name = "Pipeline";
+    var mkdocs_page_input_path = "pipeline.md";
+    var mkdocs_page_url = "/clu-spacy/pipeline/";
+  </script>
+  
+  <script src="../js/jquery-2.1.1.min.js" defer></script>
+  <script src="../js/modernizr-2.8.3.min.js" defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.5.0/highlight.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.5.0/languages/yaml.min.js"></script>
+  <script>hljs.initHighlightingOnLoad();</script> 
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+    <div class="wy-side-scroll">
+      <div class="wy-side-nav-search">
+        <a href=".." class="icon icon-home"> clu-spacy</a>
+        <div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="../search.html" method="get">
+      <input type="text" name="q" placeholder="Search docs" title="Type search term here" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+                <ul>
+                    <li class="toctree-l1"><a class="reference internal" href="..">Home</a>
+                    </li>
+                </ul>
+                <p class="caption"><span class="caption-text">User Guide</span></p>
+                <ul>
+                    <li class="toctree-l1"><a class="reference internal" href="../install/">Installation</a>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../tutorial/">Usage</a>
+                    </li>
+                </ul>
+                <p class="caption"><span class="caption-text">Developing</span></p>
+                <ul>
+                    <li class="toctree-l1"><a class="reference internal" href="../dev/install/">Install</a>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../dev/test/">Testing</a>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../dev/documentation/">Documentation</a>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../dev/formatting/">Formatting</a>
+                    </li>
+                </ul>
+                <p class="caption"><span class="caption-text">Training</span></p>
+                <ul class="current">
+                    <li class="toctree-l1 current"><a class="reference internal current" href="./">Pipeline</a>
+    <ul class="current">
+    <li class="toctree-l2"><a class="reference internal" href="#training-from-command-line">Training from command line</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#component-options">Component Options</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#config-options">Config options</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#training-from-script">Training from script</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#adding-custom-components">Adding custom components</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#saving-and-loading-the-pipeline">Saving and loading the pipeline</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#spacy-train">spacy train</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#languageto_disk">Language.to_disK()</a>
+    </li>
+        </ul>
+    </li>
+    </ul>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../data/">Data</a>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../pipefaq/">FAQ</a>
+                    </li>
+                </ul>
+                <p class="caption"><span class="caption-text">API</span></p>
+                <ul>
+                    <li class="toctree-l1"><a class="" href="../api/clu/test/index.html">clu.test</a>
+                    </li>
+                </ul>
+                <p class="caption"><span class="caption-text">About</span></p>
+                <ul>
+                    <li class="toctree-l1"><a class="reference internal" href="../contributing/">Contributing</a>
+                    </li>
+                </ul>
+      </div>
+    </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="..">clu-spacy</a>
+      </nav>
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="..">Docs</a> &raquo;</li>
+    
+      
+        
+          <li>Training &raquo;</li>
+        
+      
+    
+    <li>Pipeline</li>
+    <li class="wy-breadcrumbs-aside">
+      
+        <a href="https://github.com/clu-ling/clu-spacy/blob/main/docs/pipeline.md"
+          class="icon icon-github"> Edit on GitHub</a>
+      
+    </li>
+  </ul>
+  
+  <hr/>
+</div>
+
+          <div role="main">
+            <div class="section">
+              
+                <h1 id="training">Training<a class="headerlink" href="#training" title="Permanent link"></a></h1>
+<p>The following methods for training a spaCy pipeline are based on the <a href="https://spacy.io/usage/training">spaCy documentation</a>.</p>
+<h2 id="training-from-command-line">Training from command line<a class="headerlink" href="#training-from-command-line" title="Permanent link"></a></h2>
+<p>A spaCy pipeline can be trained via the command line using a config.cfg file. The <code>config.cfg</code> can be generated in one of two ways:</p>
+<ul>
+<li><a href="https://spacy.io/api/cli#init-config">init method</a>: <code>python -m spacy init config config.cfg [options]</code></li>
+<li>manually: You can use spaCy's <a href="https://spacy.io/usage/training#quickstart">quickstart</a> and <code>init fill-config</code></li>
+</ul>
+<p>After the appropriate config.cfg is generated (see <a href="# FIXME: gist">here</a> for an example config), run the following:</p>
+<p><code>python -m spacy train config.cfg --output ./output/path [options]</code></p>
+<p>If the paths to the train and dev data are not included in the config.cfg, inclue the tags <code>--paths.train ./train --paths.dev ./dev</code>.</p>
+<p>This will automatically launch a training sequence for the specified number of epochs and settings in the config. The output directory will be populated with a <code>best</code> and <code>last</code> model.</p>
+<h3 id="component-options">Component Options<a class="headerlink" href="#component-options" title="Permanent link"></a></h3>
+<p>You can use the included spaCy factory components or add custom components with <code>nlp.add_pipe()</code>. When using the factory components the user can specify which model to use. These models are <code>Thinc</code> models used by spaCy. Custom components can also make use of these models or can include custom coded models. This code can be attached to the trained pipeline when packaged.</p>
+<p>Built-in components are (<a href="https://spacy.io/usage/processing-pipelines#built-in">spaCy</a>):</p>
+<ul>
+<li>DependencyParser</li>
+<li>EntityLinker</li>
+<li>EntityRecognizer</li>
+<li>Morphologizer</li>
+<li>SentenceRecognizer</li>
+<li>SpanCategorizer</li>
+<li>Tagger</li>
+<li>TextCategorizer</li>
+<li>Tok2Vec</li>
+</ul>
+<p>These components can be trained with custom architecture or using the default architectures by spaCy. When using the default architectures, using the config quickstart will autofill for this option.</p>
+<h3 id="config-options">Config options<a class="headerlink" href="#config-options" title="Permanent link"></a></h3>
+<p>For further details on the options available to the <code>config.cfg</code> see the <a href="https://spacy.io/usage/training#config">spaCy docs</a>.</p>
+<h2 id="training-from-script">Training from script<a class="headerlink" href="#training-from-script" title="Permanent link"></a></h2>
+<p><code>Language.to_disk()</code> after <code>Language.add_pipe()</code>, create_pipe() deprecated.</p>
+<h2 id="adding-custom-components">Adding custom components<a class="headerlink" href="#adding-custom-components" title="Permanent link"></a></h2>
+<p>https://spacy.io/api/language#component</p>
+<pre><code class="language-python">@Language.component(&quot;my_component&quot;)
+def my_component(doc):
+    # do soemthing to doc
+    return doc
+</code></pre>
+<p>The new <code>my_component</code> can now be added to the pipeline via <code>Language.add_pipe("my_component")</code>. (Language.create_pipe() is now deprecated for user use).</p>
+<h2 id="saving-and-loading-the-pipeline">Saving and loading the pipeline<a class="headerlink" href="#saving-and-loading-the-pipeline" title="Permanent link"></a></h2>
+<h3 id="spacy-train">spacy train<a class="headerlink" href="#spacy-train" title="Permanent link"></a></h3>
+<p>Specify output directory, run <code>spacy package /path/to/pipeline /path/to/output</code>.</p>
+<h3 id="languageto_disk">Language.to_disK()<a class="headerlink" href="#languageto_disk" title="Permanent link"></a></h3>
+<p>After modifying Language object, run <code>Language.to_disk("/path/to/pipeline")</code> then <code>spacy package /pipeline /output</code>.</p>
+<!-- ## FAQ
+
+Mutliple training data files passed to `spacy train`? NER data vs Conllu data? (DocBin().merge? Can add NER attr to conllu docbins.) -->
+              
+            </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="../data/" class="btn btn-neutral float-right" title="Data">Next <span class="icon icon-circle-arrow-right"></span></a>
+      
+      
+        <a href="../dev/formatting/" class="btn btn-neutral" title="Formatting"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <!-- Copyright etc -->
+    
+      <p>Copyright &copy; 2021 <a href="https://parsertongue.org/about">Gus Hahn-Powell</a>.</p>
+    
+  </div>
+
+  Built with <a href="https://www.mkdocs.org/">MkDocs</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+</footer>
+      
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+  <div class="rst-versions" role="note" aria-label="versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    
+        <span>
+          <a href="https://github.com/clu-ling/clu-spacy/" class="fa fa-github" style="color: #fcfcfc"> GitHub</a>
+        </span>
+    
+    
+      <span><a href="../dev/formatting/" style="color: #fcfcfc">&laquo; Previous</a></span>
+    
+    
+      <span><a href="../data/" style="color: #fcfcfc">Next &raquo;</a></span>
+    
+  </span>
+</div>
+    <script>var base_url = '..';</script>
+    <script src="../js/theme_extra.js" defer></script>
+    <script src="../js/theme.js" defer></script>
+      <script src="../search/main.js" defer></script>
+    <script defer>
+        window.onload = function () {
+            SphinxRtdTheme.Navigation.enable(true);
+        };
+    </script>
+
+</body>
+</html>
