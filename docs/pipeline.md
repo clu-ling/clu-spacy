@@ -60,12 +60,12 @@ The new `my_component` can now be added to the pipeline via `Language.add_pipe("
 
 ### spacy train
 
-Specify output directory, run `spacy package /pipeline /output`.
+Specify output directory, run `spacy package /path/to/pipeline /path/to/output`.
 
 ### Language.to_disK()
 
 After modifying Language object, run `Language.to_disk("/path/to/pipeline")` then `spacy package /pipeline /output`.
 
-## FAQ
+<!-- ## FAQ
 
-Mutliple training data files passed to `spacy train`? NER data vs Conllu data? (DocBin().merge? Can add NER attr to conllu docbins.)
+Mutliple training data files passed to `spacy train`? NER data vs Conllu data? (DocBin().merge? Can add NER attr to conllu docbins.) -->
