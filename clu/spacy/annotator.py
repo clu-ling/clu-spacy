@@ -5,7 +5,7 @@ from processors.annotators import Processor
 
 from processors.ds import Document as CluDocument
 import spacy
-from processors_extensions.spacy.utils import ConverterUtils as converter
+from clu.spacy.utils import ConverterUtils as converter
 
 DEFAULT_PIPELINE = "en_core_web_sm"
 

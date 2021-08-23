@@ -6,13 +6,13 @@ from typing import Optional, Text, List
 from fastapi import FastAPI, File
 import uvicorn
 
-from processors_extensions.spacy.info import info
+from clu.spacy.info import info
 
 from spacy.tokens import Doc as SpacyDoc
 from processors.ds import Document as CluDocument
 
-from processors_extensions.spacy.utils import ConverterUtils as converter
-from processors_extensions.spacy.annotator import SpacyProcessor, DEFAULT_PIPELINE
+from clu.spacy.utils import ConverterUtils as converter
+from clu.spacy.annotator import SpacyProcessor, DEFAULT_PIPELINE
 
 from pydantic import BaseModel
 import yaml
