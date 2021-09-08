@@ -41,7 +41,10 @@ For further details on the options available to the `config.cfg` see the [spaCy 
 
 ## Training from script
 
-`Language.to_disk()` after `Language.add_pipe()`, create_pipe() deprecated.
+`#!python Language.to_disk()` after `#!python Language.add_pipe()`.
+
+!!! note
+    Language.create_pipe() deprecated.
 
 ## Adding custom components
 
@@ -62,7 +65,7 @@ The new `my_component` can now be added to the pipeline via `Language.add_pipe("
 
 Specify output directory, run `spacy package /path/to/pipeline /path/to/output`.
 
-### Language.to_disK()
+### Language.to_disk()
 
 After modifying Language object, run `Language.to_disk("/path/to/pipeline")` then `spacy package /pipeline /output`.
 

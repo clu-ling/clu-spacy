@@ -1,0 +1,229 @@
+#!/usr/bin/python
+
+from __future__ import annotations
+
+from pydantic import BaseModel
+import yaml
+import argparse
+
+import tempfile
+import os
+from subprocess import Popen, PIPE
+
+from typing import List, Text, Dict, Tuple
+import spacy
+from spacy.tokens import DocBin, Doc
+
+import re
+
+DATA_EXT = [".conllu", ".conll", ".iob"] # .json
+NLP = spacy.blank("en") # Default, updates if conf lang != "en"
+
+class DataConfig(BaseModel):
+    language = 'en'
+    n_sents = 10
+    directory: Text = "./"
+    groups: Dict = dict()
+    files: Dict = dict()
+
+    @staticmethod
+    def from_file(config_file: Text) -> "DataConfig":
+        """
+        Loads a conf instance from a YAML file
+        """
+        cfp = os.path.abspath(config_file)
+        with open(cfp) as f:
+            return DataConfig.from_str(config=f.read())
+
+    @staticmethod
+    def from_str(config: Text) -> "DataConfig":
+        """
+        Loads a conf instance based on the contents (str) of a YAML config file
+        """
+        config_dict = yaml.load(config, Loader=yaml.FullLoader).get("data-conversion")
+
+        conf = DataConfig(
+            language = config_dict["language"],
+            n_sents = config_dict["n_sents"],
+            directory = config_dict["directory"],
+            groups = config_dict["groups"],
+            files = config_dict["data"]
+        )
+
+        return conf
+
+    @staticmethod
+    def make_file_list(files: Dict) -> List:
+        # List of files in data bloc
+        file_list = []
+        for k, v in files.items():
+            for l, w in v.items():
+                file_list += w
+        
+        file_list.sort()
+        return file_list
+
+class FileComparison:
+
+    def __init__(self, filename, name, ext):
+        self.filename = filename
+        self._name = name
+        self._ext = ext
+        self._size = os.path.getsize(self.filename) / 1000
+        self._examples = 0
+        self._avg = 0
+        self._percent = 0
+        self._mismatch = dict()
+
+    def _generate_comp(self):
+        # Temp dir for comp files
+        with tempfile.TemporaryDirectory() as tmpdir:
+            command = ['python', '-m', 'spacy', 'convert', self.filename, tmpdir]
+            proc = Popen(command, stdout=PIPE, stderr=PIPE)
+            stdout, stderr = proc.communicate()
+            proc.wait()
+
+            doc_bin = DocBin().from_disk(tmpdir+f"/{self._name}.spacy")
+            docs = list(doc_bin.get_docs(NLP.vocab))
+
+            count = 0; match = 0
+            for doc in docs:
+                gold_doc = NLP(doc.text)
+                tokens = [t.text for t in doc]
+                gold_tokens = [t.text for t in gold_doc]
+
+                if tokens == gold_tokens:
+                    if len(set(''.join(tokens))) == 1: # Discard examples with one repeated token
+                        self._mismatch[count] = (doc.text, tokens, gold_tokens)
+                    else:
+                        match += 1
+                else:
+                    self._mismatch[count] = (doc.text, tokens, gold_tokens)
+
+                count += len(tokens)
+                self._examples += 1    
+
+            self._avg = round(count / self._examples, 1)
+            self._percent = round((match / self._examples) * 100, 1)
+
+    def _report(self):
+        report = f'{self.filename}\n{self._size}KB, {self._examples} examples, {self._avg} tokens/ex, {self._percent}% match\n'
+        print(report)
+
+    def _log(self, log):
+        mismatch_str = {}
+        for k, v in self._mismatch.items():
+            mismatch_str[k] = [v[0], ','.join(v[1]), ','.join(v[2])]
+        log_dict = {self.filename:{"size":self._size, "examples":self._examples, "average":self._avg, "percent":self._percent, "mismatch":mismatch_str}}
+        yaml.dump(log_dict, log, default_flow_style=False)
+
+    def _make_match(self):
+        match_name = self._name+"-match"+self._ext
+        with open(self.filename, 'r') as f:
+            contents = f.read()
+            listed = contents.split("\n\n")
+            match = open("./match/"+self._name+"-match"+self._ext, 'w')
+            mismatch = open("./mismatch/"+self._name+"-mismatch"+self._ext, 'w')
+            mismatch_text = [i[0] for i in self._mismatch.values()]
+            reg = r'\#\s+text\s+=\s+(.+)\n'
+            for l in listed:
+                if re.search(reg, l):
+                    if re.search(reg, l).group(1) not in mismatch_text:
+                        match.write(l+"\n\n")
+                    else:
+                        mismatch.write(l+"\n\n")
+            
+            match.close()
+            mismatch.close()
+
+        print(f'Made {match_name}...\n')
+
+def _append_doc_bin(filename, n_sents) -> DocBin:
+    with tempfile.TemporaryDirectory() as tmpdir:
+        command = ['python', '-m', 'spacy', 'convert', filename, tmpdir]
+        proc = Popen(command, stdout=PIPE, stderr=PIPE)
+        stdout, stderr = proc.communicate()
+        proc.wait()
+
+        name, _ = os.path.splitext(os.path.split(filename)[1])
+        doc_bin = DocBin().from_disk(tmpdir+f"/{name}.spacy")
+
+    return doc_bin
+
+def groups_to_binary(file_groups, n_sents):
+    # {"train": {"base": [files], "add1": [files]}, "dev": {...}}
+    for step, comps in file_groups.items():
+        for comp, files in comps.items():
+            doc_bins = list()
+            for f in files:
+                name, ext = os.path.splitext(f)
+                filename = f"./match/{name}-match{ext}"
+                doc_bins.append(_append_doc_bin(filename, n_sents))
+                if len(doc_bins) > 1:
+                    for d in doc_bins[1:]:
+                        if doc_bins[0].attrs == d.attrs:
+                            doc_bins[0].merge(d)
+                        else:
+                            print(f"WARNING! Attr mismatch in {step}, {comp} files! Mismatching file not included in spaCy binary.")
+            
+            doc_bins[0].to_disk(f"./match/{comp}-{step}.spacy")
+
+
+if __name__ == "__main__":
+
+    # Argparser, provide config, log option
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-c", "--config", help="yaml config file")
+    parser.add_argument("--log", action="store_true", help="Write a data compare log.")
+    parser.add_argument("--convert", action="store_true", help="Convert data to SpaCy binary.")
+    # parser.add_argument("--re-tokenize", action="store_true", help)
+    args = parser.parse_args()
+
+    conf = DataConfig.from_file(args.config)
+
+    print("Validating data tokenization...\n")
+    # Config for dir and filesNLP
+    # cwd data files
+    os.chdir(conf.directory)
+
+    print(f"Comparing tokenization to SpaCy.blank('{conf.language}') tokenization rules...\n")
+    if conf.language != "en":
+        NLP = spacy.blank(conf.language)
+
+    # Dict[filename:FileComparison()]
+    file_list = DataConfig.make_file_list(conf.files)
+    file_dict = {}
+    for filename in file_list:
+        name, ext = os.path.splitext(filename)
+        if ext in DATA_EXT:
+            file_dict[filename] = FileComparison(filename, name, ext)
+
+    for _, v in file_dict.items():
+        v._generate_comp()
+        v._report()
+
+    # make log if --log
+    if args.log:
+        with open('log.yml', 'w') as log:
+            for k, v in file_dict.items():
+                v._log(log)
+        print("Log written to log.yml!\n")
+
+    # make match if --convert
+    if args.convert:
+        print("Making match directory...\n")
+        if not os.path.isdir("./match"):
+            os.mkdir("./match")
+        if not os.path.isdir("./mismatch"):
+            os.mkdir("./mismatch")
+
+        for _, v in file_dict.items():
+            v._make_match()
+        print("Match files generated!\n")
+
+        # if args.re-tokenize:
+        #   retokenize()
+
+        print("Converting groups to spaCy binary...\n")
+        groups_to_binary(conf.files, conf.n_sents)
+        print("SpaCy binaries generated! See 'match' directory.")

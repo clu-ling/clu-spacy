@@ -38,12 +38,16 @@ dev_deps = test_deps + [
     "mkdocs-git-authors-plugin==0.3.3",
     "mkdocs-rtd-dropdown==1.0.2",
     "pre-commit==2.13.0",
+    "pymdown-extensions==8.2"
 ]
 
 setup(name='clu-spacy',
       packages=["clu.spacy"],
       scripts=[
-        'bin/api'
+        'bin/api',
+        'bin/evaluate',
+        'bin/retrieve',
+        'bin/data'
       ],
       version=info.version,
       keywords=['nlp', 'converter'],
