@@ -1,13 +1,13 @@
-FROM python:3.8
+FROM parsertongue/python:3.8
 
-LABEL author="Zachary Wellington"
+LABEL author="Gus Hahn-Powell"
 LABEL description="Image definition for Python-based clu-spacy."
 
 # Create app directory
 WORKDIR /app
 
 # Install python dependencies
-RUN pip install -U pip==21.1.1 setuptools==56.2.0 wheel==0.36.2
+RUN pip install -U pip setuptools wheel
 
 # iPython
 RUN pip install -U ipython==7.19.0 \
@@ -16,14 +16,19 @@ RUN pip install -U ipython==7.19.0 \
     jupyter contrib nbextension install --user &&\
     pytest==5.3.4
 
-# SpaCy and API deps
-RUN pip install -U "spacy>=3.0.0,<4.0.0" \
-    py-processors==3.0.3 \
-    fastapi[all]==0.61.1 \
-    uvicorn==0.11.8 
+
+# Rust for tokenizers
+RUN curl https://sh.rustup.rs -sSf | bash -s -- -y
+ENV PATH="/root/.cargo/bin:${PATH}"
+
+RUN rustc --version
+RUN pip install -U setuptools_rust
+
+# SpaCy
+RUN pip install -U "spacy"
 
 # SpaCy trained pipe
-RUN python -m spacy download en_core_web_sm
+RUN python -m spacy download en_core_web_trf
     
 # Bundle app source
 COPY . .
@@ -36,6 +41,7 @@ RUN mv scripts/* /usr/local/bin/ && \
 # Assignment-specific deps
 RUN pip install -e ".[all]"
 
+RUN pip install -U markupsafe==2.0.1
 # CMD ["ipython"]
 # Launch jupyter
 # CMD ["/bin/bash", "/usr/local/bin/launch-notebook.sh"]

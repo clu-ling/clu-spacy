@@ -1,19 +1,23 @@
-from pydantic import BaseModel
+from typing import List, Text
+import os
 
-class AppInfo(BaseModel):
+
+class AppInfo:
     """
     General information about the application.
     """
-    version: str = "0.1"
-    description: str = "spacy is a module for converting between SpaCy Doc and processors Document instances."
-    author: str = "zwellington"
-    contact: str = "gus@parsertongue.org"
-    repo: str = "https://github.com/clu-ling/processors-spacy"
-    license: str = "Apache 2.0"
-    
+
+    version: Text = "0.2"
+    commit: Text = os.environ.get("GIT_COMMIT", "unknown")
+    description: Text = "spacy is a module for converting between SpaCy Doc and processors Document instances."
+    authors: List[Text] = ["myedibleenso", "zwellington"]
+    contact: Text = "gus@parsertongue.org"
+    repo: Text = "https://github.com/clu-ling/clu-spacy"
+    license: Text = "Apache 2.0"
+
     @property
-    def download_url(self) -> str: 
-      return f"{self.repo}/archive/v{self.version}.zip"
-    
+    def download_url(self) -> Text:
+        return f"{self.repo}/archive/v{self.version}.zip"
+
 
 info = AppInfo()
