@@ -1,3 +1,5 @@
 py-processors==3.0.3
-fastapi[all]==0.61.1
-uvicorn==0.11.8
+pydantic
+fastapi[all]==0.85.0
+uvicorn==0.18.3
+spacy~=3.4.1

@@ -4,4 +4,4 @@
 
 # How do I use it?
 
-See our [tutorial](..). Python [API documentation](./api) is also available.
+See our [tutorial](./tutorial). Python [API documentation](./api) is also available.

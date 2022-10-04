@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+
+ARCH=$1
+
+if [ "$ARCH" != "amd64" ] && [ "$ARCH" != "arm64" ] ; then
+    echo "$ARCH is not a valid platform."
+    echo "Platform for must either be amd64 or arm64"
+    exit 1
+fi
+
+ORG=parsertongue
+IMAGE=clu-spacy
+TAG=latest
+
+docker buildx build --build-arg PLATFORM=$ARCH --output=type=docker --platform=linux/$ARCH -f Dockerfile -t "$ORG/$IMAGE:$TAG" .
