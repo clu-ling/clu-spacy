@@ -39,7 +39,8 @@ nav:
         - Data: data.md
         - FAQ: pipefaq.md
     - API:
-        - "clu.test": api/clu/test/index.html
+        - "clu.spacy": api/clu/spacy/index.html
+
     - About:
         - Contributing: contributing.md
         # - License: "License, FIXME"

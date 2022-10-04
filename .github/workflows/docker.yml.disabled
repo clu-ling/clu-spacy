@@ -1,0 +1,80 @@
+name: Project CI (docker-based)
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  setup:
+    name: setup
+    runs-on: ubuntu-latest
+    outputs:
+      sha_short: ${{ steps.sha.outputs.sha_short }}
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+    - name: generate short commit hash
+      id: sha
+      run: echo "::set-output name=sha_short::$(git rev-parse --short HEAD)"
+
+  clu_spacy:
+    env:
+      ORG: "parsertongue"
+      IMAGE_NAME: "clu-spacy"
+      TAG: "3.8"
+      DOCKERFILE: "Dockerfile"
+    name: "Python library (clu-spacy)"
+    runs-on: ubuntu-latest
+    needs: setup
+    steps:
+    # Checkout code
+    - name: Checkout code
+      uses: actions/checkout@v2
+    # Setup docker
+    - name: Set up QEMU
+      uses: docker/setup-qemu-action@v1
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v1
+    - name: Login to DockerHub # FIXME: Optional
+      continue-on-error: true
+      uses: docker/login-action@v1
+      with:
+        username: ${{ secrets.DOCKERHUB_USERNAME }}
+        password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+    # clu.spacy
+    # Library (clu-spacy)
+    - name: "Build multiarch docker image (clu-spacy)"
+      #working-directory: ./python
+      run: |
+        docker buildx build --load --platform linux/amd64 -f ${DOCKERFILE} -t "${ORG}/${IMAGE_NAME}:amd64" .
+      #docker buildx build --load --platform linux/arm64 -f ${DOCKERFILE} -t "${ORG}/${IMAGE_NAME}:arm64" .
+    - name: "Test multiarch build"
+      run: |
+        docker run -i "${ORG}/${IMAGE_NAME}:amd64" python --version
+      #docker run -i "${ORG}/${IMAGE_NAME}:arm64" python --version
+    # Tests
+    - name: "Tests and coverage"
+      run: |
+        docker run -i "${ORG}/${IMAGE_NAME}:amd64" green -vvv /app
+    # Type checks
+    - name: "Type checks (clu-spacy)"
+      continue-on-error: true
+      run : |
+        docker run -i "${ORG}/${IMAGE_NAME}" mypy --install-types --non-interactive --ignore-missing-imports --follow-imports=skip --strict-optional --no-site-packages --exclude "^(build|misc)/$" /app
+    # publish
+    - name: "Publish multiarch docker image (clu-spacy)"
+      continue-on-error: true
+      if: github.ref == 'refs/heads/main'
+      # run: |
+      #   docker buildx build --platform=linux/amd64,linux/arm64 -f ${DOCKERFILE} --push -t "${ORG}/${IMAGE_NAME}:latest" -t "${ORG}/${IMAGE_NAME}:${TAG}" -t "${ORG}/${IMAGE_NAME}:${{ needs.setup.outputs.sha_short }}" .
+      run: |
+        docker buildx build --platform=linux/amd64 -f ${DOCKERFILE} --push -t "${ORG}/${IMAGE_NAME}:latest" -t "${ORG}/${IMAGE_NAME}:${TAG}" -t "${ORG}/${IMAGE_NAME}:${{ needs.setup.outputs.sha_short }}" .
+
+    # code formatting and linting
+    - name: "Code formatting & linting (clu-spacy)"
+      continue-on-error: true
+      run: |
+        docker run -i "${ORG}/${IMAGE_NAME}:amd64" black --check /app

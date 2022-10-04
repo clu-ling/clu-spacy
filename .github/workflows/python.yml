@@ -1,0 +1,71 @@
+# dockerless action
+name: Project CI (clu-spacy)
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  setup:
+    name: setup
+    runs-on: ubuntu-latest
+    outputs:
+      sha_short: ${{ steps.sha.outputs.sha_short }}
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+    - name: generate short commit hash
+      id: sha
+      run: echo "::set-output name=sha_short::$(git rev-parse --short HEAD)"
+
+  python:
+    name: "Python library"
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest] #, macos-latest, windows-latest]
+        python-version: [ '3.8', '3.9' ]
+        # exclude:
+        #   - os: macos-latest
+        #     python-version: '3.8'
+        #   - os: windows-latest
+        #     python-version: '3.6'
+    needs: setup
+    steps:
+    # Checkout code
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: ${{ matrix.python-version }}
+        #architecture: x64
+    - name: Display Python version
+      run: |
+        python -c "import sys; print(sys.version)"
+
+    # Library
+    - name: "Install library (clu-spacy)"
+      #working-directory: ./python
+      run: |
+        pip install -e ".[all]"
+    # Tests
+    - name: "Tests and coverage (clu-spacy)"
+      #working-directory: ./python
+      run: |
+        green -vvvv --run-coverage .
+    # Type checks
+    - name: "Type checks (clu-spacy)"
+      #working-directory: ./python
+      continue-on-error: true
+      run: |
+        mypy --install-types --non-interactive --ignore-missing-imports --follow-imports=skip --strict-optional --no-site-packages --exclude "^(build|misc)/$" .
+    # code formatting and linting
+    - name: "Code formatting & linting"
+      #working-directory: ./python
+      continue-on-error: true
+      run: |
+        black --check .
